@@ -1,0 +1,83 @@
+import math
+
+
+FAIL_REWARD = 1e-26
+MAX_STEERING_ANGLE = 30
+STEERING_GRANULARITY = 5
+MAX_SPEED = 4
+RACELINE_RANGE = 6  
+
+
+WP = -1
+
+def dist_2_points(x1, x2, y1, y2):
+    return ((x1 - x2)**2 + (y1 - y2)**2)**0.5
+
+#########
+def gaussian(x, mu, sig):
+    return math.exp(-((x - mu) ** 2) / (2 * (sig ** 2)))
+########
+
+def reward_function(params):
+    global WP
+
+
+    x = params['x']
+    y = params['y']
+    speed = params['speed']
+    steering_angle = abs(params['steering_angle'])
+    all_wheels_on_track = params['all_wheels_on_track']
+    is_reversed = params.get('is_reversed', False)
+    track_width = params['track_width']
+    distance_from_center = params['distance_from_center']
+    progress = params['progress']
+
+   
+    if not all_wheels_on_track or is_reversed:
+        return float(FAIL_REWARD)
+
+
+    waypoints = params['waypoints']
+    p = params['closest_waypoints'][1]
+    wpSize = len(waypoints)
+
+    p_before = (p - RACELINE_RANGE) % wpSize
+    p_after = (p + RACELINE_RANGE) % wpSize
+    x_before, y_before = waypoints[p_before]
+    x_after, y_after = waypoints[p_after]
+    qline_x = (x_before + x_after) / 2
+    qline_y = (y_before + y_after) / 2
+
+    dist_to_raceline = dist_2_points(qline_x, x, qline_y, y)
+
+    raceline_reward = 1e-3
+    if p == WP:
+        raceline_reward = 1e-3
+    else:
+        WP = p
+        if dist_to_raceline < 0.05: raceline_reward = 1.0
+        elif dist_to_raceline < 0.1: raceline_reward = 0.8
+        elif dist_to_raceline < 0.15: raceline_reward = 0.5
+
+##########################
+    distance_reward = gaussian(distance_from_center, 0, track_width / 4) * 10
+
+
+    direction_reward = 1.0
+    if steering_angle > MAX_STEERING_ANGLE / STEERING_GRANULARITY:
+        direction_reward *= 0.5
+
+
+    speed_reward = (speed / MAX_SPEED) * 100
+
+
+    reward = raceline_reward + distance_reward + direction_reward + speed_reward
+
+    if progress > 70 and progress < 100:
+        reward *= (1 + progress / 100)
+    elif progress >= 100:
+        reward *= 5
+##########################
+
+
+    return float(reward)
