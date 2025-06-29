@@ -1,4 +1,4 @@
-# AI-NTUTAdd commentMore actions
+# AI-NTUT
 The Reinforcement Learning AI 
 ## AI-NTUT_one
 AI 第一堂
