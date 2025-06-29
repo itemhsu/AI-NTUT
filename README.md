@@ -66,3 +66,6 @@ https://www.oasiscience.com/signin/matthew
 | --- | --- |
 | GitHub 有交付報告MD | 5 |
 | 逐步說明訓練思路 | +5 |
+
+### 決賽視頻
+https://youtu.be/gSzTYdZMMjA
